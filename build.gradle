@@ -1,0 +1,25 @@
+plugins {
+    id "java-library"
+}
+
+group = 'com.zebrunner'
+version = "${version != 'unspecified' ? version : '1.0-SNAPSHOT'}"
+
+repositories {
+    jcenter()
+    mavenCentral()
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
+}
+
+dependencies {
+    implementation("com.zebrunner:agent-core:1.0-SNAPSHOT")
+    implementation("com.nordstrom.tools:junit-foundation:11.2.0")
+    implementation("junit:junit:4.13")
+
+    annotationProcessor("org.projectlombok:lombok:1.18.10")
+    compileOnly("org.projectlombok:lombok:1.18.10")
+}
+
+apply from: 'publish-maven.gradle'
