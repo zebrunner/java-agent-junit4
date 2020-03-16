@@ -18,12 +18,12 @@ public class JUnit4JavaAgent {
 
     public static void premain(String args, Instrumentation inst) {
 
-        installClassFileTransformer(inst);
+        installJUnitHandlerTransformer(inst);
 
         LifecycleHooks.installTransformer(inst);
     }
 
-    private static ClassFileTransformer installClassFileTransformer(Instrumentation inst) {
+    private static ClassFileTransformer installJUnitHandlerTransformer(Instrumentation inst) {
         final TypeDescription getChildren = TypePool.Default.ofSystemLoader().describe(GetChildrenProxy.class.getName()).resolve();
 
         return new AgentBuilder.Default()
