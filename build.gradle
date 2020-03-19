@@ -23,3 +23,8 @@ dependencies {
 }
 
 apply from: 'publish-maven.gradle'
+
+test.doFirst {
+    //jvmArgs "-javaagent:${classpath.find { it.name == 'junit-foundation-' + junitFoundationVersion + '.jar' }.absolutePath}"
+    jvmArgs "-javaagent:/Users/bogdanrutskov/git/java-testframeworks-sandbox/src/main/resources/zebrunner-junit4-agent.jar"
+}

@@ -7,7 +7,6 @@ import com.zebrunner.agent.core.registrar.TestRunRegistrar;
 import com.zebrunner.agent.core.registrar.TestRunStartDescriptor;
 import com.zebrunner.agent.core.registrar.TestStartDescriptor;
 import org.junit.runner.Description;
-import org.junit.runner.notification.Failure;
 
 import java.lang.reflect.Method;
 import java.time.OffsetDateTime;
@@ -49,7 +48,7 @@ public class JUnitAdapter {
         OffsetDateTime startedAt = OffsetDateTime.now();
         Method method = retrieveTestMethod(description);
 
-        TestStartDescriptor testStartDescriptor = new TestStartDescriptor(description.getDisplayName(), description.getDisplayName(), startedAt, description.getTestClass(), method);
+        TestStartDescriptor testStartDescriptor = new TestStartDescriptor(String.valueOf(description.getDisplayName()), description.getDisplayName(), startedAt, description.getTestClass(), method);
         String currentTestId = generateTestId(description);
         testsInExecution.add(currentTestId);
         registrar.startTest(currentTestId, testStartDescriptor);
@@ -65,10 +64,10 @@ public class JUnitAdapter {
         }
     }
 
-    public void registerTestFailure(Failure failure) {
+    public void registerTestFailure(Description description, String failureMessage) {
         OffsetDateTime endedAt = OffsetDateTime.now();
-        TestFinishDescriptor result = new TestFinishDescriptor(Status.FAILED, endedAt, failure.getMessage());
-        String currentTestId = generateTestId(failure.getDescription());
+        TestFinishDescriptor result = new TestFinishDescriptor(Status.FAILED, endedAt, failureMessage);
+        String currentTestId = generateTestId(description);
         testsInExecution.remove(currentTestId);
         registrar.finishTest(currentTestId, result);
     }
