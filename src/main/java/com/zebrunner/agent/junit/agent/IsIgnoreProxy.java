@@ -53,7 +53,7 @@ public class IsIgnoreProxy {
 
     private static boolean isDescriptionForRerun(Description description, List<TestDTO> tests) {
         return tests.stream()
-                    .anyMatch(t -> t.getUid().equals(description.getDisplayName()));
+                    .anyMatch(t -> t.getUuid().equals(description.getDisplayName()));
     }
 
     /**
