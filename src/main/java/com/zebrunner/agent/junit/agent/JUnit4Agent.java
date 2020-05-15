@@ -1,6 +1,7 @@
 package com.zebrunner.agent.junit.agent;
 
 import com.nordstrom.automation.junit.LifecycleHooks;
+import com.zebrunner.agent.core.agent.CoreAgent;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.MethodDelegation;
@@ -18,7 +19,7 @@ public class JUnit4Agent {
     private static final String IS_IGNORED_MTD_NAME = "isIgnored";
 
     public static void premain(String args, Instrumentation instrumentation) {
-
+        CoreAgent.premain(args, instrumentation);
         if (isRerun()) {
             installZebrunnerTransformer(instrumentation);
         }
