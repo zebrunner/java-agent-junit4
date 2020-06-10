@@ -1,6 +1,7 @@
 package com.zebrunner.agent.junit.agent;
 
 import com.nordstrom.automation.junit.LifecycleHooks;
+import com.zebrunner.agent.core.agent.AgentDiscoverable;
 import com.zebrunner.agent.core.agent.CoreAgent;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
@@ -13,12 +14,13 @@ import static com.zebrunner.agent.core.registrar.RerunContextHolder.isRerun;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-public class JUnit4Agent {
+public class JUnitDescriber implements AgentDiscoverable {
 
     private static final String CLASS_RUNNER_CLASS_NAME = "org.junit.runners.BlockJUnit4ClassRunner";
     private static final String IS_IGNORED_MTD_NAME = "isIgnored";
 
-    public static void premain(String args, Instrumentation instrumentation) {
+    @Override
+    public void onPremain(String args, Instrumentation instrumentation) {
         CoreAgent.premain(args, instrumentation);
         if (isRerun()) {
             installZebrunnerTransformer(instrumentation);
@@ -40,4 +42,5 @@ public class JUnit4Agent {
     private static void installJUnitFoundationTransformer(Instrumentation instrumentation) {
         LifecycleHooks.installTransformer(instrumentation);
     }
+
 }
