@@ -11,10 +11,13 @@ repositories {
     maven {
         url "https://oss.sonatype.org/content/repositories/snapshots/"
     }
+    maven {
+        url "https://nexus.zebrunner.dev/repository/maven-snapshots/"
+    }
 }
 
 dependencies {
-    implementation("com.zebrunner:agent-core:1.0.1.42-SNAPSHOT")
+    implementation("com.zebrunner:agent-core:1.1.0.55-SNAPSHOT")
     implementation("com.nordstrom.tools:junit-foundation:12.0.0")
     implementation("junit:junit:4.13")
 
