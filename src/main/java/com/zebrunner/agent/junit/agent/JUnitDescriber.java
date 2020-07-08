@@ -1,8 +1,7 @@
 package com.zebrunner.agent.junit.agent;
 
 import com.nordstrom.automation.junit.LifecycleHooks;
-import com.zebrunner.agent.core.agent.AgentDiscoverable;
-import com.zebrunner.agent.core.agent.CoreAgent;
+import com.zebrunner.agent.core.agent.PremainInvocationListener;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.MethodDelegation;
@@ -14,14 +13,13 @@ import static com.zebrunner.agent.core.registrar.RerunContextHolder.isRerun;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-public class JUnitDescriber implements AgentDiscoverable {
+public class JUnitDescriber implements PremainInvocationListener {
 
     private static final String CLASS_RUNNER_CLASS_NAME = "org.junit.runners.BlockJUnit4ClassRunner";
     private static final String IS_IGNORED_MTD_NAME = "isIgnored";
 
     @Override
     public void onPremain(String args, Instrumentation instrumentation) {
-        CoreAgent.premain(args, instrumentation);
         if (isRerun()) {
             installZebrunnerTransformer(instrumentation);
         }
@@ -30,7 +28,9 @@ public class JUnitDescriber implements AgentDiscoverable {
     }
 
     private static void installZebrunnerTransformer(Instrumentation instrumentation) {
-        final TypeDescription ignore = TypePool.Default.ofSystemLoader().describe(IsIgnoreProxy.class.getName()).resolve();
+        TypeDescription ignore = TypePool.Default.ofSystemLoader()
+                                                 .describe(IsIgnoreProxy.class.getName())
+                                                 .resolve();
 
         new AgentBuilder.Default()
                 .type(hasSuperType(named(CLASS_RUNNER_CLASS_NAME)))

@@ -17,12 +17,23 @@ repositories {
 }
 
 dependencies {
-    implementation("com.zebrunner:agent-core:1.1.0.55-SNAPSHOT")
+    implementation("com.zebrunner:agent-core:1.1.0.60-SNAPSHOT")
     implementation("com.nordstrom.tools:junit-foundation:12.0.0")
     implementation("junit:junit:4.13")
 
     annotationProcessor("org.projectlombok:lombok:1.18.10")
     compileOnly("org.projectlombok:lombok:1.18.10")
+}
+
+jar {
+    manifest {
+        attributes(
+                "Premain-Class": "com.zebrunner.agent.core.agent.CoreAgent",
+                "Can-Redefine-Classes": false,
+                "Can-Retransform-Classes": true,
+                "Build-Jdk": "1.8.0_152"
+        )
+    }
 }
 
 apply from: 'publish-maven.gradle'
