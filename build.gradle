@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.zebrunner:agent-core:1.1.0.60-SNAPSHOT")
+    implementation("com.zebrunner:agent-core:1.1.0.61-SNAPSHOT")
     implementation("com.nordstrom.tools:junit-foundation:12.0.0")
     implementation("junit:junit:4.13")
 
