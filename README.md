@@ -14,7 +14,9 @@ To check out the project and build from source, do the following:
 
 Agent comes bundled with JUnit 4.13, so you may want to comment our your dependency or exclude it from agent.
 
-Gradle:
+<!-- tabs:start -->
+
+#### **Gradle:**
 ```gradle
 dependencies {
   testImplementation 'com.zebrunner:agent-junit:1.0.0'
@@ -25,7 +27,7 @@ test.doFirst {
 }
 ```
 
-Maven:
+#### **Maven:**
 ```xml
 <dependency>
   <groupId>com.zebrunner</groupId>
@@ -33,6 +35,8 @@ Maven:
   <version>1.0.0</version>
 </dependency>
 ```
+
+<!-- tabs:end -->
 
 # Agent configuration
 
