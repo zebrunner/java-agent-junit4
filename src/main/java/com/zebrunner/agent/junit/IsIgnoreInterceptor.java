@@ -1,4 +1,4 @@
-package com.zebrunner.agent.junit.agent;
+package com.zebrunner.agent.junit;
 
 import com.zebrunner.agent.core.registrar.RerunContextHolder;
 import com.zebrunner.agent.core.rest.domain.TestDTO;
@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-public class IsIgnoreProxy {
+public class IsIgnoreInterceptor {
 
     @RuntimeType
     public static Boolean isIgnore(@This final Runner runner, @SuperCall final Callable<Boolean> proxy, @Argument(0) Object child) throws Exception {
