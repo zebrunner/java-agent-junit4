@@ -128,7 +128,9 @@ Most modern IDEs provide an ability to run tests locally and specify environment
 
 To add a VM argument for run via IDE, open the preferred IDE's settings. Then find the VM arguments setting and append the following line to the property value.
 
-`-javaagent:<path-to-junit-agent-jar>`
+```shell
+-javaagent:<path-to-junit-agent-jar>
+```
 
 The value you append to VM arguments setting must contain a valid path to your local junit-agent jar file. In most cases, this jar has been downloaded by your build tool and saved in its local repository (`.m2` folder for Maven or `.gradle/caches/modules-2/files-2.1` folder for Gradle).
 
