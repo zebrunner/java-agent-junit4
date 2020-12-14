@@ -1,4 +1,4 @@
-package com.zebrunner.agent.junit.listener;
+package com.zebrunner.agent.junit;
 
 import com.nordstrom.automation.junit.AtomicTest;
 import com.nordstrom.automation.junit.JUnitRetryAnalyzer;
@@ -7,7 +7,6 @@ import com.nordstrom.automation.junit.RunWatcher;
 import com.nordstrom.automation.junit.RunnerWatcher;
 import com.nordstrom.automation.junit.ShutdownListener;
 import com.nordstrom.automation.junit.TestObjectWatcher;
-import com.zebrunner.agent.junit.adapter.JUnitAdapter;
 import org.junit.internal.AssumptionViolatedException;
 import org.junit.internal.runners.model.ReflectiveCallable;
 import org.junit.runner.Describable;
@@ -47,7 +46,8 @@ public class TestRunListener implements ShutdownListener, RunnerWatcher, TestObj
     @Override
     public void testStarted(AtomicTest<FrameworkMethod> atomicTest) {
         Description description = atomicTest.getDescription();
-        adapter.registerTestStart(description);
+        FrameworkMethod frameworkMethod = atomicTest.getIdentity();
+        adapter.registerTestStart(description, frameworkMethod);
     }
 
     @Override
@@ -97,4 +97,5 @@ public class TestRunListener implements ShutdownListener, RunnerWatcher, TestObj
     public boolean retry(FrameworkMethod method, Throwable thrown) {
         return false;
     }
+
 }
