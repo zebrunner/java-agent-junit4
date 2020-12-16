@@ -21,6 +21,7 @@ publishing {
 
             pom {
                 name = 'Zebrunner JUnit agent'
+                description = 'Zebrunner JUnit 4 agent library'
                 url = 'https://github.com/zebrunner/java-agent-junit'
                 organization {
                     name = 'Zebrunner'
