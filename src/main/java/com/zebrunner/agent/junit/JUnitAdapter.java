@@ -1,11 +1,11 @@
 package com.zebrunner.agent.junit;
 
-import com.zebrunner.agent.core.registrar.Status;
-import com.zebrunner.agent.core.registrar.TestFinishDescriptor;
-import com.zebrunner.agent.core.registrar.TestRunFinishDescriptor;
 import com.zebrunner.agent.core.registrar.TestRunRegistrar;
-import com.zebrunner.agent.core.registrar.TestRunStartDescriptor;
-import com.zebrunner.agent.core.registrar.TestStartDescriptor;
+import com.zebrunner.agent.core.registrar.descriptor.Status;
+import com.zebrunner.agent.core.registrar.descriptor.TestFinishDescriptor;
+import com.zebrunner.agent.core.registrar.descriptor.TestRunFinishDescriptor;
+import com.zebrunner.agent.core.registrar.descriptor.TestRunStartDescriptor;
+import com.zebrunner.agent.core.registrar.descriptor.TestStartDescriptor;
 import org.junit.runner.Description;
 import org.junit.runners.model.FrameworkMethod;
 
@@ -20,7 +20,7 @@ import java.util.Objects;
  */
 public class JUnitAdapter {
 
-    private static final TestRunRegistrar registrar = TestRunRegistrar.registrar();
+    private static final TestRunRegistrar registrar = TestRunRegistrar.getInstance();
 
     // static is required !
     private static Description rootSuiteDescription;
@@ -38,13 +38,13 @@ public class JUnitAdapter {
                     name
             );
 
-            registrar.start(testRunStartDescriptor);
+            registrar.registerStart(testRunStartDescriptor);
         }
     }
 
     public void registerRunFinish(Description description) {
         if (Objects.equals(rootSuiteDescription.getTestClass(), description.getTestClass())) {
-            registrar.finish(new TestRunFinishDescriptor(OffsetDateTime.now()));
+            registrar.registerFinish(new TestRunFinishDescriptor(OffsetDateTime.now()));
         }
     }
 
@@ -58,7 +58,7 @@ public class JUnitAdapter {
         );
         String currentTestId = generateTestId(description);
         testsInExecution.add(currentTestId);
-        registrar.startTest(currentTestId, testStartDescriptor);
+        registrar.registerTestStart(currentTestId, testStartDescriptor);
     }
 
     public void registerTestFinish(Description description) {
@@ -67,7 +67,7 @@ public class JUnitAdapter {
             OffsetDateTime endedAt = OffsetDateTime.now();
             TestFinishDescriptor testFinishDescriptor = new TestFinishDescriptor(Status.PASSED, endedAt);
             testsInExecution.remove(currentTestId);
-            registrar.finishTest(currentTestId, testFinishDescriptor);
+            registrar.registerTestFinish(currentTestId, testFinishDescriptor);
         }
     }
 
@@ -76,7 +76,7 @@ public class JUnitAdapter {
         TestFinishDescriptor result = new TestFinishDescriptor(Status.FAILED, endedAt, failureMessage);
         String currentTestId = generateTestId(description);
         testsInExecution.remove(currentTestId);
-        registrar.finishTest(currentTestId, result);
+        registrar.registerTestFinish(currentTestId, result);
     }
 
     // TODO by nsidorevich on 2/27/20: ??? parametrized tests?

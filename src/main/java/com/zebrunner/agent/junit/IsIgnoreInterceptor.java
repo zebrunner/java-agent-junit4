@@ -1,7 +1,7 @@
 package com.zebrunner.agent.junit;
 
 import com.zebrunner.agent.core.registrar.RerunContextHolder;
-import com.zebrunner.agent.core.rest.domain.TestDTO;
+import com.zebrunner.agent.core.registrar.domain.TestDTO;
 import net.bytebuddy.implementation.bind.annotation.Argument;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
 import net.bytebuddy.implementation.bind.annotation.SuperCall;
@@ -40,9 +40,10 @@ public class IsIgnoreInterceptor {
 
     /**
      * Reruns test if it`s present in rerun scope or it`s not describable
+     *
      * @param runner - current runner
-     * @param child - child of the runner
-     * @param <T> - child type
+     * @param child  - child of the runner
+     * @param <T>    - child type
      * @return value which indicate that child can be executed on rerun
      */
     private static <T> boolean isChildForRerun(ParentRunner<T> runner, T child) {
@@ -57,12 +58,7 @@ public class IsIgnoreInterceptor {
     }
 
     /**
-     * Invoked method by name from class or superclass hierarchy (if method is not exists)
-     * @param fromInstance
-     * @param methodName
-     * @param parameters
-     * @param <R>
-     * @return
+     * Invoked method by name from class or superclass hierarchy (if method is not exists).
      */
     private static <R> R invokeMethod(Object fromInstance, String methodName, Object... parameters) {
         R result = null;
@@ -85,11 +81,7 @@ public class IsIgnoreInterceptor {
     }
 
     /**
-     * find declared method by name in class and superclasses
-     * @param klass
-     * @param methodName
-     * @param parameterTypes
-     * @return
+     * find declared method by name in class and superclasses.
      */
     private static Method findMethodByName(Class<?> klass, String methodName, Object... parameterTypes) {
         Class<?>[] parameterTypeClasses = Arrays.stream(parameterTypes)
@@ -105,11 +97,7 @@ public class IsIgnoreInterceptor {
     }
 
     /**
-     * Find declared method by name in class
-     * @param klass
-     * @param methodName
-     * @param parameterTypes
-     * @return
+     * Find declared method by name in class.
      */
     private static Method findDeclaredMethod(Class<?> klass, String methodName, Class<?>... parameterTypes) {
         Method[] methods = klass.getDeclaredMethods();
