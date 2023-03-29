@@ -1,14 +1,17 @@
 package com.zebrunner.agent.junit;
 
-import com.zebrunner.agent.core.registrar.RerunContextHolder;
+import com.zebrunner.agent.core.listener.RerunListener;
 import com.zebrunner.agent.core.registrar.domain.TestDTO;
+import com.zebrunner.agent.junit.core.ArgumentsIndexResolver;
+import com.zebrunner.agent.junit.core.RunContextService;
+import com.zebrunner.agent.junit.core.TestCorrelationData;
+import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.implementation.bind.annotation.Argument;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
 import net.bytebuddy.implementation.bind.annotation.SuperCall;
 import net.bytebuddy.implementation.bind.annotation.This;
 import org.junit.runner.Description;
-import org.junit.runner.Runner;
-import org.junit.runners.ParentRunner;
+import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
 
 import java.lang.reflect.InvocationTargetException;
@@ -17,44 +20,42 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-public class IsIgnoreInterceptor {
+@Slf4j
+public class IsIgnoreInterceptor implements RerunListener {
 
+    @Override
+    public void onRerun(List<TestDTO> tests) {
+        for (TestDTO test : tests) {
+            TestCorrelationData testCorrelationData = TestCorrelationData.fromJsonString(test.getCorrelationData());
+
+            RunContextService.addTestCorrelationData(testCorrelationData, test.getId());
+        }
+    }
+
+    // BlockJUnit4ClassRunner -> protected boolean isIgnored(FrameworkMethod child)
     @RuntimeType
-    public static Boolean isIgnore(@This final Runner runner, @SuperCall final Callable<Boolean> proxy, @Argument(0) Object child) throws Exception {
+    public static Boolean isIgnore(@This final BlockJUnit4ClassRunner runner,
+                                   @SuperCall final Callable<Boolean> proxy,
+                                   @Argument(0) FrameworkMethod child) throws Exception {
         boolean isIgnored = proxy.call();
-        if (!isIgnored) {
-            if (child instanceof FrameworkMethod) {
-                isIgnored = !isItemForRerun(runner, child);
-            }
+        if (isIgnored) {
+            return true;
         }
-        return isIgnored;
-    }
 
-    @SuppressWarnings("unchecked")
-    private static <T> boolean isItemForRerun(Runner runner, T child) {
-        if (runner instanceof ParentRunner) {
-            return isChildForRerun((ParentRunner<T>) runner, child);
+        // BlockJUnit4ClassRunner -> protected Description describeChild(FrameworkMethod method)
+        Description testDescription = invokeMethod(runner, "describeChild", child);
+        if (testDescription == null) {
+            log.warn(
+                    "Unable to build test description from method: {}.\n" +
+                    "Check that provided version of JUnit is compatible with Zebrunner agent.\n" +
+                    "Test will be automatically ignored for rerun.",
+                    child
+            );
+            return true;
         }
-        return true;
-    }
 
-    /**
-     * Reruns test if it`s present in rerun scope or it`s not describable
-     *
-     * @param runner - current runner
-     * @param child  - child of the runner
-     * @param <T>    - child type
-     * @return value which indicate that child can be executed on rerun
-     */
-    private static <T> boolean isChildForRerun(ParentRunner<T> runner, T child) {
-        Description description = invokeMethod(runner, "describeChild", child);
-        List<TestDTO> tests = RerunContextHolder.getTests();
-        return description != null && isDescriptionForRerun(description, tests);
-    }
-
-    private static boolean isDescriptionForRerun(Description description, List<TestDTO> tests) {
-        return tests.stream()
-                    .anyMatch(t -> t.getUuid().equals(description.getDisplayName()));
+        int argumentsIndex = ArgumentsIndexResolver.resolve(testDescription);
+        return !RunContextService.isEligibleForRerun(child, argumentsIndex);
     }
 
     /**
@@ -116,4 +117,5 @@ public class IsIgnoreInterceptor {
         }
         return true;
     }
+
 }
