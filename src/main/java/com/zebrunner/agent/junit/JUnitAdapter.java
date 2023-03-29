@@ -1,19 +1,25 @@
 package com.zebrunner.agent.junit;
 
+import com.nordstrom.automation.junit.AtomicTest;
+import com.zebrunner.agent.core.registrar.RunContextHolder;
 import com.zebrunner.agent.core.registrar.TestRunRegistrar;
 import com.zebrunner.agent.core.registrar.descriptor.Status;
 import com.zebrunner.agent.core.registrar.descriptor.TestFinishDescriptor;
 import com.zebrunner.agent.core.registrar.descriptor.TestRunFinishDescriptor;
 import com.zebrunner.agent.core.registrar.descriptor.TestRunStartDescriptor;
 import com.zebrunner.agent.core.registrar.descriptor.TestStartDescriptor;
+import com.zebrunner.agent.junit.core.ArgumentsIndexResolver;
+import com.zebrunner.agent.junit.core.RunContextService;
+import com.zebrunner.agent.junit.core.TestCorrelationData;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.junit.runner.Description;
-import org.junit.runners.model.FrameworkMethod;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * Adapter used to convert JUnit test domain to Zebrunner Agent domain
@@ -22,20 +28,15 @@ public class JUnitAdapter {
 
     private static final TestRunRegistrar registrar = TestRunRegistrar.getInstance();
 
-    // static is required !
     private static Description rootSuiteDescription;
-    private static List<String> testsInExecution = Collections.synchronizedList(new ArrayList<>());
+    private static final Set<String> testIds = ConcurrentHashMap.newKeySet();
 
     public void registerRunStart(Description description) {
         if (rootSuiteDescription == null) {
             rootSuiteDescription = description;
 
-            String name = description.getClassName();
             TestRunStartDescriptor testRunStartDescriptor = new TestRunStartDescriptor(
-                    name,
-                    "junit",
-                    OffsetDateTime.now(),
-                    name
+                    description.getDisplayName(), "junit4", OffsetDateTime.now(), null
             );
 
             registrar.registerStart(testRunStartDescriptor);
@@ -48,40 +49,68 @@ public class JUnitAdapter {
         }
     }
 
-    public void registerTestStart(Description description, FrameworkMethod frameworkMethod) {
+    public void registerTestStart(AtomicTest test) {
+        TestCorrelationData testCorrelationData = this.buildTestCorrelationData(test);
         TestStartDescriptor testStartDescriptor = new TestStartDescriptor(
-                String.valueOf(description.getDisplayName()),
-                String.valueOf(description.getDisplayName()),
-                OffsetDateTime.now(),
-                description.getTestClass(),
-                frameworkMethod.getMethod()
+                testCorrelationData.asJsonString(),
+                test.getDescription().getDisplayName(),
+                test.getIdentity().getDeclaringClass(),
+                test.getIdentity().getMethod(),
+                testCorrelationData.getArgumentsIndex()
         );
-        String currentTestId = generateTestId(description);
-        testsInExecution.add(currentTestId);
+
+        if (RunContextHolder.isRerun()) {
+            RunContextService.getZebrunnerIdOnRerun(test)
+                             .ifPresent(testStartDescriptor::setZebrunnerId);
+        }
+
+        String currentTestId = testCorrelationData.toString();
+        testIds.add(currentTestId);
         registrar.registerTestStart(currentTestId, testStartDescriptor);
     }
 
-    public void registerTestFinish(Description description) {
-        String currentTestId = generateTestId(description);
-        if (testsInExecution.contains(currentTestId)) {
-            OffsetDateTime endedAt = OffsetDateTime.now();
-            TestFinishDescriptor testFinishDescriptor = new TestFinishDescriptor(Status.PASSED, endedAt);
-            testsInExecution.remove(currentTestId);
-            registrar.registerTestFinish(currentTestId, testFinishDescriptor);
+    public void registerTestFinish(AtomicTest test) {
+        TestCorrelationData testCorrelationData = this.buildTestCorrelationData(test);
+        String currentTestId = testCorrelationData.toString();
+
+        if (testIds.contains(currentTestId)) {
+            TestFinishDescriptor testFinishDescriptor = new TestFinishDescriptor(Status.PASSED);
+
+            testIds.remove(currentTestId);
+            registrar.registerTestFinish(testCorrelationData.toString(), testFinishDescriptor);
         }
     }
 
-    public void registerTestFailure(Description description, String failureMessage) {
-        OffsetDateTime endedAt = OffsetDateTime.now();
-        TestFinishDescriptor result = new TestFinishDescriptor(Status.FAILED, endedAt, failureMessage);
-        String currentTestId = generateTestId(description);
-        testsInExecution.remove(currentTestId);
+    public void registerTestFailure(AtomicTest test, Throwable thrown) {
+        TestCorrelationData testCorrelationData = this.buildTestCorrelationData(test);
+        String currentTestId = testCorrelationData.toString();
+        TestFinishDescriptor result = new TestFinishDescriptor(Status.FAILED, OffsetDateTime.now(), ExceptionUtils.getStackTrace(thrown));
+
+        testIds.remove(currentTestId);
         registrar.registerTestFinish(currentTestId, result);
     }
 
-    // TODO by nsidorevich on 2/27/20: ??? parametrized tests?
-    private String generateTestId(Description description) {
-        return description.getDisplayName();
+    public void registerTestSkipped(AtomicTest test, Throwable thrown) {
+        TestCorrelationData testCorrelationData = this.buildTestCorrelationData(test);
+        String currentTestId = testCorrelationData.toString();
+        TestFinishDescriptor result = new TestFinishDescriptor(Status.SKIPPED, OffsetDateTime.now(), ExceptionUtils.getStackTrace(thrown));
+
+        testIds.remove(currentTestId);
+        registrar.registerTestFinish(currentTestId, result);
+    }
+
+    private TestCorrelationData buildTestCorrelationData(AtomicTest test) {
+        return TestCorrelationData.builder()
+                                  .className(test.getIdentity().getDeclaringClass().getName())
+                                  .methodName(test.getIdentity().getMethod().getName())
+                                  .parameterClassNames(
+                                          Arrays.stream(test.getIdentity().getMethod().getParameterTypes())
+                                                .map(Class::getName)
+                                                .collect(Collectors.toList())
+                                  )
+                                  .argumentsIndex(ArgumentsIndexResolver.resolve(test.getDescription()))
+                                  .displayName(test.getDescription().getDisplayName())
+                                  .build();
     }
 
 }

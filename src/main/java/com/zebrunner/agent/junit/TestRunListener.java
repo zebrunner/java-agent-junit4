@@ -1,22 +1,17 @@
 package com.zebrunner.agent.junit;
 
 import com.nordstrom.automation.junit.AtomicTest;
-import com.nordstrom.automation.junit.JUnitRetryAnalyzer;
-import com.nordstrom.automation.junit.MethodWatcher;
 import com.nordstrom.automation.junit.RunWatcher;
 import com.nordstrom.automation.junit.RunnerWatcher;
-import com.nordstrom.automation.junit.ShutdownListener;
-import com.nordstrom.automation.junit.TestObjectWatcher;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.internal.AssumptionViolatedException;
-import org.junit.internal.runners.model.ReflectiveCallable;
 import org.junit.runner.Describable;
-import org.junit.runner.Description;
-import org.junit.runners.model.FrameworkMethod;
 
 /**
  * Zebrunner Agent Listener implementation tracking JUnit test run events
  */
-public class TestRunListener implements ShutdownListener, RunnerWatcher, TestObjectWatcher, RunWatcher<FrameworkMethod>, MethodWatcher<FrameworkMethod>, JUnitRetryAnalyzer {
+@Slf4j
+public class TestRunListener implements RunnerWatcher, RunWatcher {
 
     private final JUnitAdapter adapter;
 
@@ -26,76 +21,64 @@ public class TestRunListener implements ShutdownListener, RunnerWatcher, TestObj
 
     @Override
     public void runStarted(Object runner) {
+        log.debug("Beginning TestRunListener -> runStarted(Object runner)");
+
         Describable describable = (Describable) runner;
-        Description description = describable.getDescription();
-        adapter.registerRunStart(description);
+        adapter.registerRunStart(describable.getDescription());
+
+        log.debug("Finishing TestRunListener -> runStarted(Object runner)");
     }
 
     @Override
     public void runFinished(Object runner) {
+        log.debug("Beginning TestRunListener -> runFinished(Object runner)");
+
         Describable describable = (Describable) runner;
-        Description description = describable.getDescription();
-        adapter.registerRunFinish(description);
+        adapter.registerRunFinish(describable.getDescription());
+
+        log.debug("Finishing TestRunListener -> runFinished(Object runner)");
     }
 
     @Override
-    public void onShutdown() {
-        //System.out.println("on shutdown");
+    public void testStarted(AtomicTest atomicTest) {
+        log.debug("Beginning TestRunListener -> testStarted(AtomicTest atomicTest)");
+
+        adapter.registerTestStart(atomicTest);
+
+        log.debug("Finishing TestRunListener -> testStarted(AtomicTest atomicTest)");
     }
 
     @Override
-    public void testStarted(AtomicTest<FrameworkMethod> atomicTest) {
-        Description description = atomicTest.getDescription();
-        FrameworkMethod frameworkMethod = atomicTest.getIdentity();
-        adapter.registerTestStart(description, frameworkMethod);
+    public void testFinished(AtomicTest atomicTest) {
+        log.debug("Beginning TestRunListener -> testFinished(AtomicTest atomicTest)");
+
+        adapter.registerTestFinish(atomicTest);
+
+        log.debug("Finishing TestRunListener -> testFinished(AtomicTest atomicTest)");
     }
 
     @Override
-    public void testFinished(AtomicTest<FrameworkMethod> atomicTest) {
-        Description description = atomicTest.getDescription();
-        adapter.registerTestFinish(description);
+    public void testFailure(AtomicTest atomicTest, Throwable thrown) {
+        log.debug("Beginning TestRunListener -> testFailure(AtomicTest atomicTest, Throwable thrown)");
+
+        adapter.registerTestFailure(atomicTest, thrown);
+
+        log.debug("Finishing TestRunListener -> testFailure(AtomicTest atomicTest, Throwable thrown)");
     }
 
     @Override
-    public void testFailure(AtomicTest<FrameworkMethod> atomicTest, Throwable thrown) {
-        Description description = atomicTest.getDescription();
-        Throwable error = atomicTest.getThrowable();
-        adapter.registerTestFailure(description, error.getMessage());
+    public void testAssumptionFailure(AtomicTest atomicTest, AssumptionViolatedException thrown) {
+        log.debug("Beginning TestRunListener -> testAssumptionFailure(AtomicTest atomicTest, AssumptionViolatedException thrown)");
+
+        adapter.registerTestSkipped(atomicTest, thrown);
+
+        log.debug("Finishing TestRunListener -> testAssumptionFailure(AtomicTest atomicTest, AssumptionViolatedException thrown)");
     }
 
     @Override
-    public void testAssumptionFailure(AtomicTest<FrameworkMethod> atomicTest, AssumptionViolatedException thrown) {
-        //System.out.println("assumption failure");
-    }
-
-    @Override
-    public void testIgnored(AtomicTest<FrameworkMethod> atomicTest) {
-        //System.out.println("ignored");
-    }
-
-    @Override
-    public void beforeInvocation(Object runner, FrameworkMethod child, ReflectiveCallable callable) {
-        //System.out.println();
-    }
-
-    @Override
-    public void afterInvocation(Object runner, FrameworkMethod child, ReflectiveCallable callable, Throwable thrown) {
-        //System.out.println("after invocation");
-    }
-
-    @Override
-    public void testObjectCreated(Object testObj, Object runner) {
-        //System.out.println("test object created");
-    }
-
-    @Override
-    public Class<FrameworkMethod> supportedType() {
-        return FrameworkMethod.class;
-    }
-
-    @Override
-    public boolean retry(FrameworkMethod method, Throwable thrown) {
-        return false;
+    public void testIgnored(AtomicTest atomicTest) {
+        log.debug("Beginning TestRunListener -> testIgnored(AtomicTest atomicTest)");
+        log.debug("Finishing TestRunListener -> testIgnored(AtomicTest atomicTest)");
     }
 
 }
